@@ -30,6 +30,27 @@ export interface CareHome {
   additional_services: string | null
   image_count: number
   representative_image_url: string | null
+  weekly_fee_from: number | null
+  weekly_fee_to: number | null
+  // Partnership
+  is_partner: boolean | null
+  // CQC inspection data
+  cqc_location_id: string | null
+  cqc_rating: string | null
+  cqc_rating_date: string | null
+  cqc_beds: number | null
+  cqc_safe: string | null
+  cqc_effective: string | null
+  cqc_caring: string | null
+  cqc_responsive: string | null
+  cqc_well_led: string | null
+  ci_service_id: string | null
+  ci_grade: string | null
+  ci_grade_date: string | null
+  ci_care_support: string | null
+  ci_environment: string | null
+  ci_staffing: string | null
+  ci_management: string | null
   // Core care types
   residential_care: ServiceValue
   nursing_care: ServiceValue
