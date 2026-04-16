@@ -122,7 +122,7 @@ export default function HomePage() {
             <h2 className="text-2xl font-bold text-stone-900 text-center mb-10">
               Why Use Careformum?
             </h2>
-            <div className="grid md:grid-cols-3 gap-8">
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
               {[
                 {
                   icon: '🔍',
@@ -133,6 +133,11 @@ export default function HomePage() {
                   icon: '♀',
                   title: 'Women-Focused Filters',
                   desc: "Easily find women-only or women-friendly care homes — a unique filter not available on other directories.",
+                },
+                {
+                  icon: '⭐',
+                  title: 'Trusted Ratings',
+                  desc: 'See Google user reviews alongside official care inspectorate scores — CQC in England, Care Inspectorate in Scotland, and CIW in Wales — so you can confidently choose the right home.',
                 },
                 {
                   icon: '📸',
