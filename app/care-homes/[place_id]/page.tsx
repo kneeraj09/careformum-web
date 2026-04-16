@@ -1,12 +1,68 @@
 import { notFound } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
+import type { Metadata } from 'next'
 import Logo from '@/app/components/Logo'
 import { supabase } from '@/lib/supabase'
 import type { CareHome, CareHomeImage } from '@/lib/types'
 import { SERVICE_GROUPS } from '@/lib/types'
 
 export const revalidate = 86400 // revalidate daily
+
+const SITE_URL = 'https://www.careformum.com'
+
+export async function generateMetadata(
+  { params }: { params: Promise<{ place_id: string }> }
+): Promise<Metadata> {
+  const { place_id } = await params
+  const home = await getCareHome(place_id)
+  if (!home) return { title: 'Care Home Not Found' }
+
+  const name    = home.name ?? 'Care Home'
+  const city    = home.city ?? home.county ?? 'UK'
+  const address = [home.address, home.city, home.postal_code].filter(Boolean).join(', ')
+
+  const genderText =
+    home.gender_focus === 'women_only'     ? 'women-only ' :
+    home.gender_focus === 'women_friendly' ? 'women-friendly ' : ''
+
+  const services: string[] = []
+  if (home.dementia_care === 'Yes')   services.push('dementia care')
+  if (home.nursing_care  === 'Yes')   services.push('nursing care')
+  if (home.respite_care  === 'Yes')   services.push('respite care')
+
+  const description = [
+    `${name} is a ${genderText}care home in ${city}.`,
+    services.length ? `Services include ${services.join(', ')}.` : '',
+    `Find contact details, photos, and full facilities at Careformum.`,
+  ].filter(Boolean).join(' ')
+
+  const pageUrl = `${SITE_URL}/care-homes/${place_id}`
+  const image   = home.representative_image_url ?? `${SITE_URL}/images/logo.png`
+
+  return {
+    title: `${name} — Care Home in ${city}`,
+    description,
+    alternates: { canonical: pageUrl },
+    openGraph: {
+      type:        'website',
+      url:         pageUrl,
+      title:       `${name} — Care Home in ${city}`,
+      description,
+      images:      [{ url: image, alt: name }],
+    },
+    twitter: {
+      card:        'summary_large_image',
+      title:       `${name} — Care Home in ${city}`,
+      description,
+      images:      [image],
+    },
+    other: {
+      'geo.region':   'GB',
+      'geo.placename': city,
+    },
+  }
+}
 
 async function getCareHome(place_id: string): Promise<CareHome | null> {
   const { data } = await supabase
@@ -42,6 +98,59 @@ function GenderBadge({ gender }: { gender: string | null }) {
     <span className={`inline-flex items-center text-sm font-medium px-3 py-1 rounded-full border ${styles[gender] ?? 'bg-stone-100 text-stone-600 border-stone-300'}`}>
       {gender === 'women_only' || gender === 'women_friendly' ? '♀ ' : ''}{labels[gender] ?? gender}
     </span>
+  )
+}
+
+const CQC_STYLES: Record<string, string> = {
+  Outstanding:            'bg-purple-50 text-purple-800 border-purple-200',
+  Good:                   'bg-green-50  text-green-800  border-green-200',
+  'Requires Improvement': 'bg-amber-50  text-amber-800  border-amber-200',
+  Inadequate:             'bg-red-50    text-red-800    border-red-200',
+}
+const CQC_DOT: Record<string, string> = {
+  Outstanding:            'bg-purple-500',
+  Good:                   'bg-green-500',
+  'Requires Improvement': 'bg-amber-400',
+  Inadequate:             'bg-red-500',
+}
+
+const CI_STYLES: Record<string, string> = {
+  // Scottish CI
+  Excellent:       'bg-purple-50 text-purple-800 border-purple-200',
+  'Very Good':     'bg-blue-50   text-blue-800   border-blue-200',
+  Good:            'bg-green-50  text-green-800  border-green-200',
+  Adequate:        'bg-amber-50  text-amber-800  border-amber-200',
+  Weak:            'bg-orange-50 text-orange-800 border-orange-200',
+  Unsatisfactory:  'bg-red-50    text-red-800    border-red-200',
+  // CIW (Wales)
+  'Requires Improvement':             'bg-amber-50  text-amber-800  border-amber-200',
+  'Requires Significant Improvement': 'bg-red-50    text-red-800    border-red-200',
+}
+const CI_DOT: Record<string, string> = {
+  // Scottish CI
+  Excellent:       'bg-purple-500',
+  'Very Good':     'bg-blue-500',
+  Good:            'bg-green-500',
+  Adequate:        'bg-amber-400',
+  Weak:            'bg-orange-400',
+  Unsatisfactory:  'bg-red-500',
+  // CIW (Wales)
+  'Requires Improvement':             'bg-amber-400',
+  'Requires Significant Improvement': 'bg-red-500',
+}
+
+function CqcDomainRow({ label, rating }: { label: string; rating: string | null }) {
+  if (!rating) return null
+  const dot = CQC_DOT[rating] ?? 'bg-stone-400'
+  const style = CQC_STYLES[rating] ?? 'bg-stone-50 text-stone-700 border-stone-200'
+  return (
+    <div className="flex items-center justify-between py-1.5 border-b border-stone-100 last:border-0">
+      <span className="text-sm text-stone-600">{label}</span>
+      <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-0.5 rounded-full border ${style}`}>
+        <span className={`w-1.5 h-1.5 rounded-full ${dot}`} />
+        {rating}
+      </span>
+    </div>
   )
 }
 
@@ -89,7 +198,52 @@ export default async function CareHomePage({
 
   const heroImage = images.find(i => i.image_type === 'exterior') ?? images[0]
 
+  // JSON-LD structured data
+  const services: string[] = []
+  if (home.dementia_care   === 'Yes') services.push('Dementia Care')
+  if (home.nursing_care    === 'Yes') services.push('Nursing Care')
+  if (home.residential_care=== 'Yes') services.push('Residential Care')
+  if (home.respite_care    === 'Yes') services.push('Respite Care')
+  if (home.palliative_care === 'Yes') services.push('Palliative Care')
+
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'LocalBusiness',
+    '@id': `${SITE_URL}/care-homes/${place_id}`,
+    name: home.name,
+    description: services.length
+      ? `${home.name} provides ${services.join(', ')} in ${home.city ?? 'the UK'}.`
+      : `Care home in ${home.city ?? 'the UK'}.`,
+    url: `${SITE_URL}/care-homes/${place_id}`,
+    telephone: home.phone ?? undefined,
+    address: {
+      '@type': 'PostalAddress',
+      streetAddress: home.address ?? undefined,
+      addressLocality: home.city ?? undefined,
+      addressRegion: home.county ?? undefined,
+      postalCode: home.postal_code ?? undefined,
+      addressCountry: 'GB',
+    },
+    geo: home.latitude && home.longitude ? {
+      '@type': 'GeoCoordinates',
+      latitude:  home.latitude,
+      longitude: home.longitude,
+    } : undefined,
+    image: heroImage?.supabase_url ?? home.representative_image_url ?? undefined,
+    aggregateRating: home.rating ? {
+      '@type': 'AggregateRating',
+      ratingValue: home.rating,
+      bestRating: 5,
+      worstRating: 1,
+    } : undefined,
+  }
+
   return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
     <div className="flex flex-col min-h-screen">
       {/* Header */}
       <header className="bg-white border-b border-stone-200 px-6 py-4 sticky top-0 z-10">
@@ -127,11 +281,27 @@ export default async function CareHomePage({
             <div>
               <div className="flex flex-wrap items-start gap-3 mb-2">
                 <h1 className="text-2xl md:text-3xl font-bold text-stone-900 flex-1">{home.name}</h1>
-                <GenderBadge gender={home.gender_focus} />
+                <div className="flex flex-wrap gap-2">
+                  {home.is_partner && (
+                    <span className="inline-flex items-center gap-1 bg-rose-600 text-white text-sm font-semibold px-3 py-1 rounded-full">
+                      ★ Featured Partner
+                    </span>
+                  )}
+                  <GenderBadge gender={home.gender_focus} />
+                </div>
               </div>
 
               <div className="flex flex-wrap items-center gap-4 text-sm text-stone-500">
                 <span>{[home.city, home.county, home.postal_code].filter(Boolean).join(', ')}</span>
+                {home.weekly_fee_from && (
+                  <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1 rounded-full text-sm font-medium">
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    From £{home.weekly_fee_from.toLocaleString()}
+                    {home.weekly_fee_to ? `–£${home.weekly_fee_to.toLocaleString()}` : ''} / week
+                  </span>
+                )}
                 {home.rating && (
                   <span className="flex items-center gap-1">
                     <svg className="w-4 h-4 text-amber-400 fill-current" viewBox="0 0 20 20">
@@ -158,6 +328,101 @@ export default async function CareHomePage({
               <div>
                 <h2 className="text-lg font-semibold text-stone-900 mb-2">Highlights</h2>
                 <p className="text-stone-600 leading-relaxed whitespace-pre-line">{home.key_selling_points}</p>
+              </div>
+            )}
+
+            {/* CQC Inspection Rating */}
+            {home.cqc_rating && (
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="text-lg font-semibold text-stone-900">CQC Inspection Rating</h2>
+                  {home.cqc_location_id && (
+                    <a
+                      href={`https://www.cqc.org.uk/location/${home.cqc_location_id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-rose-600 hover:underline"
+                    >
+                      View full report →
+                    </a>
+                  )}
+                </div>
+                <div className={`rounded-2xl border p-4 mb-3 ${CQC_STYLES[home.cqc_rating] ?? 'bg-stone-50 border-stone-200'}`}>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs font-medium uppercase tracking-wide opacity-70 mb-0.5">Overall Rating</p>
+                      <p className="text-2xl font-bold">{home.cqc_rating}</p>
+                      {home.cqc_rating_date && (
+                        <p className="text-xs opacity-60 mt-0.5">
+                          Inspected {new Date(home.cqc_rating_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
+                        </p>
+                      )}
+                    </div>
+                    {home.cqc_beds && (
+                      <div className="text-right">
+                        <p className="text-2xl font-bold">{home.cqc_beds}</p>
+                        <p className="text-xs opacity-70">registered beds</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                {(home.cqc_safe || home.cqc_effective || home.cqc_caring || home.cqc_responsive || home.cqc_well_led) && (
+                  <div className="bg-white border border-stone-200 rounded-2xl p-4">
+                    <p className="text-xs font-medium text-stone-500 uppercase tracking-wide mb-2">Domain Ratings</p>
+                    <CqcDomainRow label="Safe"        rating={home.cqc_safe} />
+                    <CqcDomainRow label="Effective"   rating={home.cqc_effective} />
+                    <CqcDomainRow label="Caring"      rating={home.cqc_caring} />
+                    <CqcDomainRow label="Responsive"  rating={home.cqc_responsive} />
+                    <CqcDomainRow label="Well-led"    rating={home.cqc_well_led} />
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Care Inspectorate Rating (Scotland / Wales) */}
+            {home.ci_grade && (
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="text-lg font-semibold text-stone-900">
+                    {home.ci_service_id?.startsWith('SIN-') ? 'Care Inspectorate Wales Rating' : 'Care Inspectorate Rating'}
+                  </h2>
+                  {home.ci_service_id && (
+                    <a
+                      href={
+                        home.ci_service_id.startsWith('SIN-')
+                          ? `https://digital.careinspectorate.wales/directory/service/${home.ci_service_id}`
+                          : `https://www.careinspectorate.com/index.php/care-services?detail=${home.ci_service_id}`
+                      }
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-rose-600 hover:underline"
+                    >
+                      View full report →
+                    </a>
+                  )}
+                </div>
+                <div className={`rounded-2xl border p-4 mb-3 ${CI_STYLES[home.ci_grade] ?? 'bg-stone-50 border-stone-200'}`}>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs font-medium uppercase tracking-wide opacity-70 mb-0.5">Overall Grade</p>
+                      <p className="text-2xl font-bold">{home.ci_grade}</p>
+                      {home.ci_grade_date && (
+                        <p className="text-xs opacity-60 mt-0.5">
+                          Inspected {new Date(home.ci_grade_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                {(home.ci_care_support || home.ci_management || home.ci_staffing || home.ci_environment) && (
+                  <div className="bg-white border border-stone-200 rounded-2xl p-4">
+                    <p className="text-xs font-medium text-stone-500 uppercase tracking-wide mb-2">Quality Themes</p>
+                    <CqcDomainRow label="Wellbeing &amp; Care Support" rating={home.ci_care_support} />
+                    <CqcDomainRow label="Leadership"                  rating={home.ci_management} />
+                    <CqcDomainRow label="Staff Team"                  rating={home.ci_staffing} />
+                    <CqcDomainRow label="Setting"                     rating={home.ci_environment} />
+                  </div>
+                )}
               </div>
             )}
 
@@ -321,5 +586,6 @@ export default async function CareHomePage({
         </div>
       </footer>
     </div>
+    </>
   )
 }

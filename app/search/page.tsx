@@ -9,24 +9,93 @@ import { supabase } from '@/lib/supabase'
 import type { CareHome } from '@/lib/types'
 
 const GENDER_OPTIONS = [
-  { value: '', label: 'All Facilities' },
-  { value: 'women', label: "Women's Only / Friendly" },
-  { value: 'mixed', label: 'Mixed' },
+  { value: '', label: 'All Facilities', description: '' },
+  {
+    value: 'women',
+    label: "Women's Only / Friendly",
+    description:
+      "Homes that provide care exclusively for women, or that actively cater to women\u2019s preferences, privacy needs, and cultural values.",
+  },
+  {
+    value: 'mixed',
+    label: 'Mixed',
+    description: 'Homes that welcome both male and female residents.',
+  },
 ]
 
 const SERVICE_FILTERS = [
-  { key: 'residential_care', label: 'Residential Care' },
-  { key: 'nursing_care', label: 'Nursing Care' },
-  { key: 'dementia_care', label: 'Dementia Care' },
-  { key: 'respite_care', label: 'Respite Care' },
-  { key: 'palliative_care', label: 'Palliative Care' },
-  { key: 'day_care', label: 'Day Care' },
-  { key: 'live_in_care', label: 'Live-in Care' },
-  { key: 'physiotherapy', label: 'Physiotherapy' },
-  { key: 'garden', label: 'Garden' },
-  { key: 'en_suite_rooms', label: 'En-Suite Rooms' },
-  { key: 'activities_programme', label: 'Activities Programme' },
-  { key: 'chef_cooked_meals', label: 'Chef-Cooked Meals' },
+  {
+    key: 'residential_care',
+    label: 'Residential Care',
+    description:
+      '24-hour personal support with daily activities such as washing, dressing and meals, in a homely setting — without on-site nursing.',
+  },
+  {
+    key: 'nursing_care',
+    label: 'Nursing Care',
+    description:
+      'Round-the-clock care delivered by qualified nurses for residents with complex medical or health conditions.',
+  },
+  {
+    key: 'dementia_care',
+    label: 'Dementia Care',
+    description:
+      "Specialist care for residents living with Alzheimer\u2019s or other forms of dementia, in a secure, structured environment.",
+  },
+  {
+    key: 'respite_care',
+    label: 'Respite Care',
+    description:
+      'Short-stay care giving family or home carers a temporary break, while the resident receives full support.',
+  },
+  {
+    key: 'palliative_care',
+    label: 'Palliative Care',
+    description:
+      'Comfort-focused care for residents nearing end of life, emphasising dignity, pain relief, and emotional support.',
+  },
+  {
+    key: 'day_care',
+    label: 'Day Care',
+    description:
+      'Daytime sessions providing social activities, meals, and personal care — residents return home each evening.',
+  },
+  {
+    key: 'live_in_care',
+    label: 'Live-in Care',
+    description:
+      "A carer lives in the resident\u2019s own home to provide round-the-clock personal support and companionship.",
+  },
+  {
+    key: 'physiotherapy',
+    label: 'Physiotherapy',
+    description:
+      'Qualified physiotherapists help residents improve mobility, strength, and independence through targeted exercise.',
+  },
+  {
+    key: 'garden',
+    label: 'Garden',
+    description:
+      'Accessible outdoor spaces for fresh air, relaxation, and gardening activities.',
+  },
+  {
+    key: 'en_suite_rooms',
+    label: 'En-Suite Rooms',
+    description:
+      'Private bedrooms with an attached bathroom, offering greater comfort and personal privacy.',
+  },
+  {
+    key: 'activities_programme',
+    label: 'Activities Programme',
+    description:
+      'Organised daily or weekly activities — arts, music, outings and social events — to support wellbeing and engagement.',
+  },
+  {
+    key: 'chef_cooked_meals',
+    label: 'Chef-Cooked Meals',
+    description:
+      'Fresh meals prepared on-site by a professional chef, tailored to individual dietary requirements and preferences.',
+  },
 ]
 
 function GenderBadge({ gender }: { gender: string | null }) {
@@ -44,6 +113,54 @@ function GenderBadge({ gender }: { gender: string | null }) {
   return (
     <span className={`text-xs font-medium px-2 py-0.5 rounded-full border ${styles[gender] ?? 'bg-stone-100 text-stone-600 border-stone-200'}`}>
       {labels[gender] ?? gender}
+    </span>
+  )
+}
+
+const RATING_STYLES: Record<string, { pill: string; dot: string }> = {
+  // CQC ratings
+  Outstanding:            { pill: 'bg-purple-50 text-purple-700 border-purple-200', dot: 'bg-purple-500' },
+  Good:                   { pill: 'bg-green-50 text-green-700 border-green-200',    dot: 'bg-green-500'  },
+  'Requires Improvement': { pill: 'bg-amber-50 text-amber-700 border-amber-200',    dot: 'bg-amber-400'  },
+  Inadequate:             { pill: 'bg-red-50 text-red-700 border-red-200',          dot: 'bg-red-500'    },
+  // CI grades
+  'Very Good':            { pill: 'bg-blue-50 text-blue-700 border-blue-200',       dot: 'bg-blue-500'   },
+  Excellent:              { pill: 'bg-purple-50 text-purple-700 border-purple-200', dot: 'bg-purple-500' },
+  Adequate:               { pill: 'bg-amber-50 text-amber-700 border-amber-200',    dot: 'bg-amber-400'  },
+  Weak:                   { pill: 'bg-orange-50 text-orange-700 border-orange-200', dot: 'bg-orange-400' },
+  Unsatisfactory:         { pill: 'bg-red-50 text-red-700 border-red-200',          dot: 'bg-red-500'    },
+  // CIW (Wales) ratings
+  'Requires Significant Improvement': { pill: 'bg-red-50 text-red-700 border-red-200', dot: 'bg-red-500' },
+}
+
+function CqcBadge({ rating }: { rating: string | null }) {
+  if (!rating) return null
+  const style = RATING_STYLES[rating] ?? { pill: 'bg-stone-50 text-stone-600 border-stone-200', dot: 'bg-stone-400' }
+  return (
+    <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full border ${style.pill}`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${style.dot}`} />
+      CQC: {rating}
+    </span>
+  )
+}
+
+function CiBadge({ rating }: { rating: string | null }) {
+  if (!rating) return null
+  const style = RATING_STYLES[rating] ?? { pill: 'bg-stone-50 text-stone-600 border-stone-200', dot: 'bg-stone-400' }
+  return (
+    <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full border ${style.pill}`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${style.dot}`} />
+      CI: {rating}
+    </span>
+  )
+}
+
+function FeeBadge({ from, to }: { from: number | null; to: number | null }) {
+  if (!from) return null
+  const text = to ? `From £${from.toLocaleString()}/wk` : `From £${from.toLocaleString()}/wk`
+  return (
+    <span className="text-xs font-medium px-2 py-0.5 rounded-full border bg-emerald-50 text-emerald-700 border-emerald-200">
+      {text}
     </span>
   )
 }
@@ -66,7 +183,14 @@ function CareHomeCard({ home }: { home: CareHome }) {
     .slice(0, 3)
 
   return (
-    <Link href={`/care-homes/${home.place_id}`} className="group bg-white rounded-2xl border border-stone-200 overflow-hidden hover:shadow-lg hover:border-rose-200 transition-all">
+    <Link
+      href={`/care-homes/${home.place_id}`}
+      className={`group bg-white rounded-2xl overflow-hidden hover:shadow-lg transition-all ${
+        home.is_partner
+          ? 'border-2 border-rose-300 hover:border-rose-400'
+          : 'border border-stone-200 hover:border-rose-200'
+      }`}
+    >
       {/* Image */}
       <div className="relative h-48 bg-stone-100">
         {home.representative_image_url ? (
@@ -85,7 +209,12 @@ function CareHomeCard({ home }: { home: CareHome }) {
             </svg>
           </div>
         )}
-        <div className="absolute top-3 left-3">
+        <div className="absolute top-3 left-3 flex gap-1.5">
+          {home.is_partner && (
+            <span className="bg-rose-600 text-white text-xs font-semibold px-2 py-0.5 rounded-full shadow-sm">
+              ★ Featured
+            </span>
+          )}
           <GenderBadge gender={home.gender_focus} />
         </div>
       </div>
@@ -104,20 +233,21 @@ function CareHomeCard({ home }: { home: CareHome }) {
           {home.postal_code ? ` · ${home.postal_code}` : ''}
         </p>
 
-        {topServices.length > 0 && (
-          <div className="flex flex-wrap gap-1.5">
-            {topServices.map(s => (
-              <span key={s} className="text-xs bg-green-50 text-green-700 border border-green-200 px-2 py-0.5 rounded-full">
-                {s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
-              </span>
-            ))}
-            {home.image_count > 0 && (
-              <span className="text-xs bg-stone-50 text-stone-500 border border-stone-200 px-2 py-0.5 rounded-full">
-                📸 {home.image_count} photos
-              </span>
-            )}
-          </div>
-        )}
+        <div className="flex flex-wrap gap-1.5">
+          <CqcBadge rating={home.cqc_rating} />
+          <CiBadge rating={home.ci_grade} />
+          <FeeBadge from={home.weekly_fee_from} to={home.weekly_fee_to} />
+          {topServices.map(s => (
+            <span key={s} className="text-xs bg-green-50 text-green-700 border border-green-200 px-2 py-0.5 rounded-full">
+              {s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
+            </span>
+          ))}
+          {home.image_count > 0 && (
+            <span className="text-xs bg-stone-50 text-stone-500 border border-stone-200 px-2 py-0.5 rounded-full">
+              📸 {home.image_count} photos
+            </span>
+          )}
+        </div>
       </div>
     </Link>
   )
@@ -146,19 +276,20 @@ function SearchContent() {
     let q = supabase
       .from('care_homes')
       .select('*', { count: 'exact' })
-      .order('rating', { ascending: false, nullsFirst: false })
+      .order('is_partner', { ascending: false, nullsFirst: false })
+      .order('rating',     { ascending: false, nullsFirst: false })
       .range(pageNum * PAGE_SIZE, (pageNum + 1) * PAGE_SIZE - 1)
 
     if (cityParam) {
       // Search across city, county AND region so e.g. "London" finds Uxbridge, Harrow etc.
       q = q.or(
-        `city.ilike.%${cityParam}%,county.ilike.%${cityParam}%,region.ilike.%${cityParam}%,address.ilike.%${cityParam}%`
+        `name.ilike.%${cityParam}%,city.ilike.%${cityParam}%,county.ilike.%${cityParam}%,region.ilike.%${cityParam}%,address.ilike.%${cityParam}%`
       )
     }
     if (genderParam === 'women') {
       q = q.in('gender_focus', ['women_only', 'women_friendly'])
     } else if (genderParam === 'mixed') {
-      q = q.eq('gender_focus', 'mixed')
+      q = q.in('gender_focus', ['mixed', 'unknown'])
     }
     for (const svc of services) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -244,17 +375,24 @@ function SearchContent() {
             <div className="mb-5">
               <p className="text-xs font-medium text-stone-500 uppercase tracking-wide mb-2">Facility Type</p>
               {GENDER_OPTIONS.map(opt => (
-                <label key={opt.value} className="flex items-center gap-2 py-1.5 cursor-pointer group">
-                  <input
-                    type="radio"
-                    name="gender"
-                    value={opt.value}
-                    checked={gender === opt.value}
-                    onChange={() => setGender(opt.value)}
-                    className="accent-rose-600"
-                  />
-                  <span className="text-sm text-stone-700 group-hover:text-rose-600 transition-colors">{opt.label}</span>
-                </label>
+                <div key={opt.value}>
+                  <label className="flex items-center gap-2 py-1.5 cursor-pointer group">
+                    <input
+                      type="radio"
+                      name="gender"
+                      value={opt.value}
+                      checked={gender === opt.value}
+                      onChange={() => setGender(opt.value)}
+                      className="accent-rose-600"
+                    />
+                    <span className="text-sm text-stone-700 group-hover:text-rose-600 transition-colors">{opt.label}</span>
+                  </label>
+                  {gender === opt.value && opt.description && (
+                    <p className="ml-5 mb-1 text-xs text-stone-500 leading-relaxed bg-stone-50 border border-stone-200 rounded-lg px-2.5 py-2">
+                      {opt.description}
+                    </p>
+                  )}
+                </div>
               ))}
             </div>
 
@@ -262,15 +400,22 @@ function SearchContent() {
             <div>
               <p className="text-xs font-medium text-stone-500 uppercase tracking-wide mb-2">Services</p>
               {SERVICE_FILTERS.map(svc => (
-                <label key={svc.key} className="flex items-center gap-2 py-1.5 cursor-pointer group">
-                  <input
-                    type="checkbox"
-                    checked={services.includes(svc.key)}
-                    onChange={() => toggleService(svc.key)}
-                    className="accent-rose-600 rounded"
-                  />
-                  <span className="text-sm text-stone-700 group-hover:text-rose-600 transition-colors">{svc.label}</span>
-                </label>
+                <div key={svc.key}>
+                  <label className="flex items-center gap-2 py-1.5 cursor-pointer group">
+                    <input
+                      type="checkbox"
+                      checked={services.includes(svc.key)}
+                      onChange={() => toggleService(svc.key)}
+                      className="accent-rose-600 rounded"
+                    />
+                    <span className="text-sm text-stone-700 group-hover:text-rose-600 transition-colors">{svc.label}</span>
+                  </label>
+                  {services.includes(svc.key) && (
+                    <p className="ml-5 mb-1 text-xs text-stone-500 leading-relaxed bg-stone-50 border border-stone-200 rounded-lg px-2.5 py-2">
+                      {svc.description}
+                    </p>
+                  )}
+                </div>
               ))}
             </div>
 
