@@ -12,17 +12,17 @@ const SERVICE_FILTERS = [
   {
     key: 'personal_care',
     label: 'Personal Care',
-    description: 'Help with washing, dressing, grooming and other daily personal tasks carried out in the client's own home.',
+    description: "Help with washing, dressing, grooming and other daily personal tasks carried out in the client's own home.",
   },
   {
     key: 'live_in_care',
     label: 'Live-in Care',
-    description: 'A professional carer lives in the client's home, providing round-the-clock support and companionship.',
+    description: "A professional carer lives in the client's home, providing round-the-clock support and companionship.",
   },
   {
     key: 'dementia_care',
     label: 'Dementia Care',
-    description: 'Specialist home care for people living with Alzheimer's or other forms of dementia.',
+    description: "Specialist home care for people living with Alzheimer's or other forms of dementia.",
   },
   {
     key: 'nursing_care',
