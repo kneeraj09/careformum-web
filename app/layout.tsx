@@ -8,20 +8,24 @@ const SITE_URL = 'https://www.careformum.com'
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: 'Careformum — Find Care Homes for Women in the UK',
+    default: 'Careformum — Care Homes for Elderly Women in the UK',
     template: '%s | Careformum',
   },
   description:
-    'Search 4,000+ UK care homes by location. Filter by women-only, dementia care, nursing care, and more. Find the right care home for your loved one.',
+    'Find the right care home for elderly women in the UK. Search 4,000+ homes by location — filter by women-only, dementia care, nursing care, and more.',
   keywords: [
-    'care homes UK',
+    'care home for elderly women',
+    'elderly care home for women',
+    'care homes for older women',
+    'elderly women care home UK',
     'women only care home',
-    'elderly care homes',
+    'care homes UK',
     'nursing homes UK',
     'dementia care homes',
     'care home directory',
     'residential care UK',
     'women care home near me',
+    'women friendly care home',
   ],
   authors: [{ name: 'Careformum', url: SITE_URL }],
   creator: 'Careformum',
@@ -45,9 +49,9 @@ export const metadata: Metadata = {
     locale: 'en_GB',
     url: SITE_URL,
     siteName: 'Careformum',
-    title: 'Careformum — Find Care Homes for Women in the UK',
+    title: 'Careformum — Care Homes for Elderly Women in the UK',
     description:
-      'Search 4,000+ UK care homes by location. Filter by women-only, dementia care, nursing care, and more.',
+      'Find the right care home for elderly women in the UK. Search 4,000+ homes — filter by women-only, dementia care, nursing care, and more.',
     images: [
       {
         url: '/images/logo.png',
@@ -59,9 +63,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Careformum — Find Care Homes for Women in the UK',
+    title: 'Careformum — Care Homes for Elderly Women in the UK',
     description:
-      'Search 4,000+ UK care homes by location. Filter by women-only, dementia care, nursing care, and more.',
+      'Find the right care home for elderly women in the UK. Search 4,000+ homes — filter by women-only, dementia care, nursing care, and more.',
     images: ['/images/logo.png'],
   },
   icons: {

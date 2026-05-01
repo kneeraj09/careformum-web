@@ -3,6 +3,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import Logo from '@/app/components/Logo'
+import EnquiryForm from '@/app/components/EnquiryForm'
 import { supabase } from '@/lib/supabase'
 import type { CareHome, CareHomeImage } from '@/lib/types'
 import { SERVICE_GROUPS } from '@/lib/types'
@@ -102,15 +103,17 @@ function GenderBadge({ gender }: { gender: string | null }) {
 }
 
 const CQC_STYLES: Record<string, string> = {
-  Outstanding:            'bg-purple-50 text-purple-800 border-purple-200',
-  Good:                   'bg-green-50  text-green-800  border-green-200',
-  'Requires Improvement': 'bg-amber-50  text-amber-800  border-amber-200',
-  Inadequate:             'bg-red-50    text-red-800    border-red-200',
+  Outstanding:              'bg-purple-50 text-purple-800 border-purple-200',
+  Good:                     'bg-green-50  text-green-800  border-green-200',
+  'Requires Improvement':   'bg-amber-50  text-amber-800  border-amber-200',
+  'Requires improvement':   'bg-amber-50  text-amber-800  border-amber-200',
+  Inadequate:               'bg-red-50    text-red-800    border-red-200',
 }
 const CQC_DOT: Record<string, string> = {
-  Outstanding:            'bg-purple-500',
-  Good:                   'bg-green-500',
-  'Requires Improvement': 'bg-amber-400',
+  Outstanding:              'bg-purple-500',
+  Good:                     'bg-green-500',
+  'Requires Improvement':   'bg-amber-400',
+  'Requires improvement':   'bg-amber-400',
   Inadequate:             'bg-red-500',
 }
 
@@ -514,16 +517,11 @@ export default async function CareHomePage({
                 </a>
               )}
 
-              {home.website && (
-                <a
-                  href={home.website}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block w-full text-center bg-rose-600 hover:bg-rose-700 text-white font-medium text-sm py-2.5 rounded-xl transition-colors mt-2"
-                >
-                  Enquire Now
-                </a>
-              )}
+              <EnquiryForm
+                placeId={place_id}
+                homeName={home.name}
+                homeCity={home.city}
+              />
             </div>
 
             {/* Map */}

@@ -8,129 +8,60 @@ import Logo from '@/app/components/Logo'
 import { supabase } from '@/lib/supabase'
 import type { CareHome } from '@/lib/types'
 
-const GENDER_OPTIONS = [
-  { value: '', label: 'All Facilities', description: '' },
-  {
-    value: 'women',
-    label: "Women\u2019s Care",
-    description:
-      "Highlights women-only and women-friendly homes. When searching by city, all local homes are shown with women-specific ones listed first.",
-  },
-  {
-    value: 'mixed',
-    label: 'Mixed',
-    description: 'Homes that welcome both male and female residents.',
-  },
-]
-
 const SERVICE_FILTERS = [
   {
-    key: 'residential_care',
-    label: 'Residential Care',
-    description:
-      '24-hour personal support with daily activities such as washing, dressing and meals, in a homely setting — without on-site nursing.',
-  },
-  {
-    key: 'nursing_care',
-    label: 'Nursing Care',
-    description:
-      'Round-the-clock care delivered by qualified nurses for residents with complex medical or health conditions.',
-  },
-  {
-    key: 'dementia_care',
-    label: 'Dementia Care',
-    description:
-      "Specialist care for residents living with Alzheimer\u2019s or other forms of dementia, in a secure, structured environment.",
-  },
-  {
-    key: 'respite_care',
-    label: 'Respite Care',
-    description:
-      'Short-stay care giving family or home carers a temporary break, while the resident receives full support.',
-  },
-  {
-    key: 'palliative_care',
-    label: 'Palliative Care',
-    description:
-      'Comfort-focused care for residents nearing end of life, emphasising dignity, pain relief, and emotional support.',
-  },
-  {
-    key: 'day_care',
-    label: 'Day Care',
-    description:
-      'Daytime sessions providing social activities, meals, and personal care — residents return home each evening.',
+    key: 'personal_care',
+    label: 'Personal Care',
+    description: 'Help with washing, dressing, grooming and other daily personal tasks carried out in the client's own home.',
   },
   {
     key: 'live_in_care',
     label: 'Live-in Care',
-    description:
-      "A carer lives in the resident\u2019s own home to provide round-the-clock personal support and companionship.",
+    description: 'A professional carer lives in the client's home, providing round-the-clock support and companionship.',
+  },
+  {
+    key: 'dementia_care',
+    label: 'Dementia Care',
+    description: 'Specialist home care for people living with Alzheimer's or other forms of dementia.',
+  },
+  {
+    key: 'nursing_care',
+    label: 'Nursing Care',
+    description: 'Care delivered by qualified nurses for clients with complex or clinical health needs at home.',
+  },
+  {
+    key: 'reablement_care',
+    label: 'Reablement Care',
+    description: 'Short-term intensive support to help clients regain independence after illness, surgery or a hospital stay.',
+  },
+  {
+    key: 'palliative_care',
+    label: 'Palliative Care',
+    description: 'Compassionate end-of-life care provided at home, focusing on comfort, dignity, and pain management.',
   },
   {
     key: 'physiotherapy',
     label: 'Physiotherapy',
-    description:
-      'Qualified physiotherapists help residents improve mobility, strength, and independence through targeted exercise.',
+    description: 'Physiotherapy sessions delivered in the home to improve mobility, strength and independence.',
   },
   {
-    key: 'garden',
-    label: 'Garden',
-    description:
-      'Accessible outdoor spaces for fresh air, relaxation, and gardening activities.',
-  },
-  {
-    key: 'en_suite_rooms',
-    label: 'En-Suite Rooms',
-    description:
-      'Private bedrooms with an attached bathroom, offering greater comfort and personal privacy.',
-  },
-  {
-    key: 'activities_programme',
-    label: 'Activities Programme',
-    description:
-      'Organised daily or weekly activities — arts, music, outings and social events — to support wellbeing and engagement.',
-  },
-  {
-    key: 'chef_cooked_meals',
-    label: 'Chef-Cooked Meals',
-    description:
-      'Fresh meals prepared on-site by a professional chef, tailored to individual dietary requirements and preferences.',
+    key: 'occupational_therapy',
+    label: 'Occupational Therapy',
+    description: 'Home assessments and therapy to help clients manage daily activities and adapt their living environment.',
   },
 ]
 
-function GenderBadge({ gender }: { gender: string | null }) {
-  // Only badge women-specific homes — 'mixed' is the default and doesn't need a label
-  if (!gender || gender === 'mixed') return null
-  const styles: Record<string, string> = {
-    women_only:     'bg-rose-100 text-rose-700 border-rose-200',
-    women_friendly: 'bg-pink-100 text-pink-700 border-pink-200',
-  }
-  const labels: Record<string, string> = {
-    women_only:     '♀ Women Only',
-    women_friendly: '♀ Women Friendly',
-  }
-  return (
-    <span className={`text-xs font-medium px-2 py-0.5 rounded-full border ${styles[gender] ?? 'bg-stone-100 text-stone-600 border-stone-200'}`}>
-      {labels[gender] ?? gender}
-    </span>
-  )
-}
-
 const RATING_STYLES: Record<string, { pill: string; dot: string }> = {
-  // CQC ratings
   Outstanding:            { pill: 'bg-purple-50 text-purple-700 border-purple-200', dot: 'bg-purple-500' },
   Good:                   { pill: 'bg-green-50 text-green-700 border-green-200',    dot: 'bg-green-500'  },
   'Requires Improvement': { pill: 'bg-amber-50 text-amber-700 border-amber-200',    dot: 'bg-amber-400'  },
   'Requires improvement': { pill: 'bg-amber-50 text-amber-700 border-amber-200',    dot: 'bg-amber-400'  },
   Inadequate:             { pill: 'bg-red-50 text-red-700 border-red-200',          dot: 'bg-red-500'    },
-  // CI grades
   'Very Good':            { pill: 'bg-blue-50 text-blue-700 border-blue-200',       dot: 'bg-blue-500'   },
   Excellent:              { pill: 'bg-purple-50 text-purple-700 border-purple-200', dot: 'bg-purple-500' },
   Adequate:               { pill: 'bg-amber-50 text-amber-700 border-amber-200',    dot: 'bg-amber-400'  },
   Weak:                   { pill: 'bg-orange-50 text-orange-700 border-orange-200', dot: 'bg-orange-400' },
   Unsatisfactory:         { pill: 'bg-red-50 text-red-700 border-red-200',          dot: 'bg-red-500'    },
-  // CIW (Wales) ratings
-  'Requires Significant Improvement': { pill: 'bg-red-50 text-red-700 border-red-200', dot: 'bg-red-500' },
 }
 
 function CqcBadge({ rating }: { rating: string | null }) {
@@ -140,27 +71,6 @@ function CqcBadge({ rating }: { rating: string | null }) {
     <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full border ${style.pill}`}>
       <span className={`w-1.5 h-1.5 rounded-full ${style.dot}`} />
       CQC: {rating}
-    </span>
-  )
-}
-
-function CiBadge({ rating }: { rating: string | null }) {
-  if (!rating) return null
-  const style = RATING_STYLES[rating] ?? { pill: 'bg-stone-50 text-stone-600 border-stone-200', dot: 'bg-stone-400' }
-  return (
-    <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full border ${style.pill}`}>
-      <span className={`w-1.5 h-1.5 rounded-full ${style.dot}`} />
-      CI: {rating}
-    </span>
-  )
-}
-
-function FeeBadge({ from, to }: { from: number | null; to: number | null }) {
-  if (!from) return null
-  const text = to ? `From £${from.toLocaleString()}/wk` : `From £${from.toLocaleString()}/wk`
-  return (
-    <span className="text-xs font-medium px-2 py-0.5 rounded-full border bg-emerald-50 text-emerald-700 border-emerald-200">
-      {text}
     </span>
   )
 }
@@ -177,8 +87,8 @@ function StarRating({ rating }: { rating: number | null }) {
   )
 }
 
-function CareHomeCard({ home }: { home: CareHome }) {
-  const topServices = ['residential_care', 'nursing_care', 'dementia_care', 'respite_care', 'palliative_care', 'day_care']
+function ProviderCard({ home }: { home: CareHome }) {
+  const topServices = ['personal_care', 'live_in_care', 'dementia_care', 'nursing_care', 'reablement_care']
     .filter(s => (home as unknown as Record<string, string>)[s] === 'Yes')
     .slice(0, 3)
 
@@ -187,8 +97,8 @@ function CareHomeCard({ home }: { home: CareHome }) {
       href={`/care-homes/${home.place_id}`}
       className={`group bg-white rounded-2xl overflow-hidden hover:shadow-lg transition-all ${
         home.is_partner
-          ? 'border-2 border-rose-300 hover:border-rose-400'
-          : 'border border-stone-200 hover:border-rose-200'
+          ? 'border-2 border-teal-300 hover:border-teal-400'
+          : 'border border-stone-200 hover:border-teal-200'
       }`}
     >
       {/* Image */}
@@ -204,25 +114,23 @@ function CareHomeCard({ home }: { home: CareHome }) {
         ) : (
           <div className="absolute inset-0 flex items-center justify-center">
             <svg className="w-12 h-12 text-stone-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
-              <polyline points="9 22 9 12 15 12 15 22" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
             </svg>
           </div>
         )}
-        <div className="absolute top-3 left-3 flex gap-1.5">
-          {home.is_partner && (
-            <span className="bg-rose-600 text-white text-xs font-semibold px-2 py-0.5 rounded-full shadow-sm">
+        {home.is_partner && (
+          <div className="absolute top-3 left-3">
+            <span className="bg-teal-600 text-white text-xs font-semibold px-2 py-0.5 rounded-full shadow-sm">
               ★ Featured
             </span>
-          )}
-          <GenderBadge gender={home.gender_focus} />
-        </div>
+          </div>
+        )}
       </div>
 
       {/* Content */}
       <div className="p-4">
         <div className="flex items-start justify-between gap-2 mb-1">
-          <h3 className="font-semibold text-stone-900 group-hover:text-rose-600 transition-colors leading-snug line-clamp-2">
+          <h3 className="font-semibold text-stone-900 group-hover:text-teal-600 transition-colors leading-snug line-clamp-2">
             {home.name}
           </h3>
           <StarRating rating={home.rating} />
@@ -235,10 +143,8 @@ function CareHomeCard({ home }: { home: CareHome }) {
 
         <div className="flex flex-wrap gap-1.5">
           <CqcBadge rating={home.cqc_rating} />
-          <CiBadge rating={home.ci_grade} />
-          <FeeBadge from={home.weekly_fee_from} to={home.weekly_fee_to} />
           {topServices.map(s => (
-            <span key={s} className="text-xs bg-green-50 text-green-700 border border-green-200 px-2 py-0.5 rounded-full">
+            <span key={s} className="text-xs bg-teal-50 text-teal-700 border border-teal-200 px-2 py-0.5 rounded-full">
               {s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
             </span>
           ))}
@@ -253,7 +159,7 @@ function CareHomeCard({ home }: { home: CareHome }) {
   )
 }
 
-function SearchContent() {
+function HomeCareSearchContent() {
   const router = useRouter()
   const params = useSearchParams()
   const [homes, setHomes] = useState<CareHome[]>([])
@@ -262,11 +168,9 @@ function SearchContent() {
   const [page, setPage] = useState(0)
 
   const cityParam    = params.get('city') ?? ''
-  const genderParam  = params.get('gender') ?? ''
   const serviceParam = params.get('service') ?? ''
 
   const [cityInput, setCityInput] = useState(cityParam)
-  const [gender, setGender]       = useState(genderParam)
   const [services, setServices]   = useState<string[]>(serviceParam ? [serviceParam] : [])
 
   const PAGE_SIZE = 24
@@ -274,36 +178,18 @@ function SearchContent() {
   const fetchHomes = useCallback(async (pageNum: number) => {
     setLoading(true)
 
-    // When women filter + city: sort women-focused homes first, show all city homes
-    // When women filter + no city: show only the genuinely women-specific homes
-    const womenWithCity = genderParam === 'women' && !!cityParam
-
     let q = supabase
       .from('care_homes')
       .select('*', { count: 'exact' })
-      .eq('service_type', 'residential')   // exclude domiciliary agencies & sheltered housing
-
-    // Primary sort: women-focused homes first when relevant
-    if (womenWithCity) {
-      // gender_focus DESC: 'women_only' > 'women_friendly' > 'mixed' alphabetically
-      q = q.order('gender_focus', { ascending: false, nullsFirst: false })
-    }
-    q = q
+      .eq('service_type', 'domiciliary')
       .order('is_partner', { ascending: false, nullsFirst: false })
       .order('rating',     { ascending: false, nullsFirst: false })
       .range(pageNum * PAGE_SIZE, (pageNum + 1) * PAGE_SIZE - 1)
 
     if (cityParam) {
-      // Search across city, county AND region so e.g. "London" finds Uxbridge, Harrow etc.
       q = q.or(
-        `name.ilike.%${cityParam}%,city.ilike.%${cityParam}%,county.ilike.%${cityParam}%,region.ilike.%${cityParam}%,address.ilike.%${cityParam}%`
+        `name.ilike.%${cityParam}%,city.ilike.%${cityParam}%,county.ilike.%${cityParam}%,address.ilike.%${cityParam}%`
       )
-    }
-    if (genderParam === 'women' && !cityParam) {
-      // No city — only show the genuinely women-specific homes
-      q = q.in('gender_focus', ['women_only', 'women_friendly'])
-    } else if (genderParam === 'mixed') {
-      q = q.eq('gender_focus', 'mixed')
     }
     for (const svc of services) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -320,7 +206,7 @@ function SearchContent() {
       setTotal(count ?? 0)
     }
     setLoading(false)
-  }, [cityParam, genderParam, services, serviceParam])
+  }, [cityParam, services, serviceParam])
 
   useEffect(() => {
     setPage(0)
@@ -330,9 +216,8 @@ function SearchContent() {
   function applyFilters() {
     const p = new URLSearchParams()
     if (cityInput.trim()) p.set('city', cityInput.trim())
-    if (gender) p.set('gender', gender)
     if (services.length === 1) p.set('service', services[0])
-    router.push(`/search?${p.toString()}`)
+    router.push(`/home-care/search?${p.toString()}`)
   }
 
   function toggleService(key: string) {
@@ -366,31 +251,36 @@ function SearchContent() {
                 value={cityInput}
                 onChange={e => setCityInput(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && applyFilters()}
-                className="w-full pl-9 pr-3 py-2 text-sm bg-stone-50 border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-400"
+                className="w-full pl-9 pr-3 py-2 text-sm bg-stone-50 border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-400"
               />
             </div>
             <button
               onClick={applyFilters}
-              className="bg-rose-600 hover:bg-rose-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+              className="bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
             >
               Search
             </button>
           </div>
+
+          <nav className="hidden md:flex items-center gap-4 text-sm text-stone-500">
+            <Link href="/" className="hover:text-teal-600 transition-colors">Care Homes</Link>
+            <Link href="/home-care" className="text-teal-600 font-medium">Care at Home</Link>
+          </nav>
         </div>
       </header>
 
-      {/* Home care crosslink banner */}
-      <div className="bg-teal-50 border-b border-teal-100 px-6 py-2.5">
+      {/* Residential care crosslink banner */}
+      <div className="bg-rose-50 border-b border-rose-100 px-6 py-2.5">
         <div className="max-w-6xl mx-auto flex items-center justify-between gap-4">
-          <p className="text-sm text-teal-800">
-            <span className="font-medium">Looking for care at home instead?</span>
-            {' '}We also list CQC-rated home care providers across the UK.
+          <p className="text-sm text-rose-800">
+            <span className="font-medium">Looking for a care home instead?</span>
+            {' '}Browse 4,200+ residential care homes across the UK.
           </p>
           <Link
-            href="/home-care"
-            className="shrink-0 text-sm font-medium text-teal-700 hover:text-teal-900 underline underline-offset-2 transition-colors"
+            href="/search"
+            className="shrink-0 text-sm font-medium text-rose-700 hover:text-rose-900 underline underline-offset-2 transition-colors"
           >
-            Browse home care →
+            Browse care homes →
           </Link>
         </div>
       </div>
@@ -401,32 +291,6 @@ function SearchContent() {
           <div className="bg-white rounded-2xl border border-stone-200 p-4 sticky top-24">
             <h2 className="font-semibold text-stone-900 mb-4">Filters</h2>
 
-            {/* Gender */}
-            <div className="mb-5">
-              <p className="text-xs font-medium text-stone-500 uppercase tracking-wide mb-2">Facility Type</p>
-              {GENDER_OPTIONS.map(opt => (
-                <div key={opt.value}>
-                  <label className="flex items-center gap-2 py-1.5 cursor-pointer group">
-                    <input
-                      type="radio"
-                      name="gender"
-                      value={opt.value}
-                      checked={gender === opt.value}
-                      onChange={() => setGender(opt.value)}
-                      className="accent-rose-600"
-                    />
-                    <span className="text-sm text-stone-700 group-hover:text-rose-600 transition-colors">{opt.label}</span>
-                  </label>
-                  {gender === opt.value && opt.description && (
-                    <p className="ml-5 mb-1 text-xs text-stone-500 leading-relaxed bg-stone-50 border border-stone-200 rounded-lg px-2.5 py-2">
-                      {opt.description}
-                    </p>
-                  )}
-                </div>
-              ))}
-            </div>
-
-            {/* Services */}
             <div>
               <p className="text-xs font-medium text-stone-500 uppercase tracking-wide mb-2">Services</p>
               {SERVICE_FILTERS.map(svc => (
@@ -436,9 +300,9 @@ function SearchContent() {
                       type="checkbox"
                       checked={services.includes(svc.key)}
                       onChange={() => toggleService(svc.key)}
-                      className="accent-rose-600 rounded"
+                      className="accent-teal-600 rounded"
                     />
-                    <span className="text-sm text-stone-700 group-hover:text-rose-600 transition-colors">{svc.label}</span>
+                    <span className="text-sm text-stone-700 group-hover:text-teal-600 transition-colors">{svc.label}</span>
                   </label>
                   {services.includes(svc.key) && (
                     <p className="ml-5 mb-1 text-xs text-stone-500 leading-relaxed bg-stone-50 border border-stone-200 rounded-lg px-2.5 py-2">
@@ -451,7 +315,7 @@ function SearchContent() {
 
             <button
               onClick={applyFilters}
-              className="mt-4 w-full bg-rose-600 hover:bg-rose-700 text-white text-sm font-medium py-2 rounded-lg transition-colors"
+              className="mt-4 w-full bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium py-2 rounded-lg transition-colors"
             >
               Apply Filters
             </button>
@@ -463,32 +327,15 @@ function SearchContent() {
           <div className="flex items-center justify-between mb-4">
             <div>
               <h1 className="text-lg font-semibold text-stone-900">
-                {cityParam && genderParam === 'women'
-                  ? `Women's care homes near ${cityParam}`
-                  : cityParam
-                  ? `Care homes in or near ${cityParam}`
-                  : genderParam === 'women'
-                  ? "Women's care homes"
-                  : 'All care homes'}
+                {cityParam
+                  ? `Home care providers near ${cityParam}`
+                  : 'All home care providers'}
               </h1>
               <p className="text-sm text-stone-500">
                 {loading ? 'Searching...' : `${total.toLocaleString()} results`}
               </p>
             </div>
           </div>
-
-          {/* Women + city: explain that women-specific homes are shown first */}
-          {genderParam === 'women' && cityParam && !loading && (
-            <div className="mb-4 p-3 bg-rose-50 border border-rose-200 rounded-xl text-sm text-rose-800 flex items-start gap-2">
-              <span className="text-lg leading-none mt-0.5">♀</span>
-              <span>
-                Women-only and women-friendly homes are shown first.
-                {homes.some(h => h.gender_focus === 'women_only' || h.gender_focus === 'women_friendly')
-                  ? ` ${homes.filter(h => h.gender_focus === 'women_only' || h.gender_focus === 'women_friendly').length} women-specific home${homes.filter(h => h.gender_focus === 'women_only' || h.gender_focus === 'women_friendly').length !== 1 ? 's' : ''} found in this area.`
-                  : ' Most care homes in the UK welcome female residents — each listing below shows its care profile, ratings, and services.'}
-              </span>
-            </div>
-          )}
 
           {loading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -504,22 +351,21 @@ function SearchContent() {
             </div>
           ) : homes.length === 0 ? (
             <div className="text-center py-20">
-              <div className="text-5xl mb-4">🔍</div>
-              <h2 className="text-lg font-semibold text-stone-900 mb-2">No care homes found</h2>
+              <div className="text-5xl mb-4">🏡</div>
+              <h2 className="text-lg font-semibold text-stone-900 mb-2">No providers found</h2>
               <p className="text-stone-500 text-sm">Try a different town, city or adjust your filters.</p>
-              <Link href="/search" className="mt-4 inline-block text-rose-600 hover:underline text-sm">
-                Browse all care homes
+              <Link href="/home-care/search" className="mt-4 inline-block text-teal-600 hover:underline text-sm">
+                Browse all home care providers
               </Link>
             </div>
           ) : (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {homes.map(home => (
-                  <CareHomeCard key={home.place_id} home={home} />
+                  <ProviderCard key={home.place_id} home={home} />
                 ))}
               </div>
 
-              {/* Pagination */}
               {totalPages > 1 && (
                 <div className="flex items-center justify-center gap-2 mt-8">
                   <button
@@ -549,10 +395,10 @@ function SearchContent() {
   )
 }
 
-export default function SearchPage() {
+export default function HomeCareSearchPage() {
   return (
     <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="text-stone-400">Loading...</div></div>}>
-      <SearchContent />
+      <HomeCareSearchContent />
     </Suspense>
   )
 }

@@ -15,7 +15,7 @@ export default function HomeJsonLd() {
           height: 400,
         },
         description:
-          'UK care home directory specialising in care homes for women. Search 4,000+ homes by location and services.',
+          'UK care home directory specialising in care homes for elderly women. Search 4,000+ homes by location, including women-only, dementia care, and nursing care.',
         areaServed: {
           '@type': 'Country',
           name: 'United Kingdom',
@@ -26,7 +26,7 @@ export default function HomeJsonLd() {
         '@id': 'https://www.careformum.com/#website',
         url: 'https://www.careformum.com',
         name: 'Careformum',
-        description: 'UK Care Home Directory — specialising in women-only and women-friendly care homes.',
+        description: 'UK Care Home Directory — the best way to find care homes for elderly women, including women-only and women-friendly facilities.',
         publisher: { '@id': 'https://www.careformum.com/#organization' },
         potentialAction: {
           '@type': 'SearchAction',

@@ -1,5 +1,6 @@
 export type ServiceValue = 'Yes' | 'No' | 'Unknown'
 export type GenderFocus = 'women_only' | 'women_friendly' | 'mixed'
+export type ServiceType = 'residential' | 'domiciliary' | 'sheltered_housing'
 
 export interface CareHome {
   place_id: string
@@ -18,6 +19,7 @@ export interface CareHome {
   email: string | null
   domain: string | null
   gender_focus: GenderFocus | null
+  service_type: ServiceType | null
   category: string | null
   subtypes: string | null
   rating: number | null
